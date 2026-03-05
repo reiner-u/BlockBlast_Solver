@@ -1,5 +1,6 @@
 #For board and solver mechanics, such as placing a piece, checking if a piece can be placed, clearing lines, etc.
 import numpy as np
+from itertools import permutations
 
 def create_empty_grid(): 
     return np.zeros((8, 8), dtype=int) #return 8x8 numpy array
@@ -63,13 +64,14 @@ def clear_lines(grid):
 def generate_moves(grid, pieces_catalog):
     moves = []
     for piece_name, piece in pieces_catalog.items():
+        cells_placed = int(np.sum(piece)) #number of filled cells in the piece, for scoring (1 point each)
         for row in range(grid.shape[0]):
             for col in range(grid.shape[1]):
                 if can_place_piece(grid, piece, row, col): #If the piece can be placed at this position, add it to the list of moves
-                    placed =   place_piece(grid, piece, row, col)
+                    placed = place_piece(grid, piece, row, col)
                     cleared_grid, cleared_lines = clear_lines(placed)
-                    moves.append((piece_name, row, col, cleared_grid, cleared_lines))
-    return moves #return a list of tuples, each containing the piece name, row, col, resulting grid after placing the piece and clearing lines, and number of lines cleared.
+                    moves.append((piece_name, row, col, cleared_grid, cleared_lines, cells_placed))
+    return moves #return a list of tuples, each containing: piece name, row, col, resulting grid after placing and clearing, number of lines cleared, and number of cells placed.
 
 def has_any_move(grid, pieces_catalog): #Check if there is at least one valid move available for the current grid and pieces catalog. Used to determine if the game is over.
     for piece_name, piece in pieces_catalog.items():
@@ -79,5 +81,31 @@ def has_any_move(grid, pieces_catalog): #Check if there is at least one valid mo
                     return True
     return False
 
-#def can_play_set(grid, three_pieces): #Check if any combination of the three pieces can be placed on the grid. Used to determine if the game is over.
-    #To be implemented, actual solver must be made first.
+def _can_place_in_order(grid, pieces):
+    # Helper for can_play_set. Tries to place each piece in the given order.
+    # Returns True if all pieces can be placed successfully.
+    if not pieces:
+        return True  # All pieces placed, success
+
+    _, piece = pieces[0]
+    remaining = pieces[1:]
+
+    for row in range(grid.shape[0]):
+        for col in range(grid.shape[1]):
+            if can_place_piece(grid, piece, row, col):
+                new_grid, _ = clear_lines(place_piece(grid, piece, row, col))
+                if _can_place_in_order(new_grid, remaining):
+                    return True
+
+    return False  # No valid position found for this piece in this ordering
+
+def can_play_set(grid, three_pieces): #Check if any ordering of the three pieces can all be placed on the grid. Used to determine if the game is over.
+    # Ordering matters because placing one piece clears lines, which may open up space for the next.
+    # three_pieces is a dict of {piece_name: piece_array} with up to 3 items.
+    piece_list = list(three_pieces.items())
+
+    for ordering in permutations(piece_list):
+        if _can_place_in_order(grid, list(ordering)):
+            return True
+
+    return False

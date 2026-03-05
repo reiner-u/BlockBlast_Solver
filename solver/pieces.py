@@ -2,6 +2,10 @@
 import numpy as np
 
 PIECES = {
+    #Single block
+    "single": np.array([
+        [1]
+    ]),
     #Squares
     "square_2": np.array([
         [1,1],
@@ -22,7 +26,7 @@ PIECES = {
     "bar_4": np.array([
         [1,1,1,1]
     ]),
-    "bare_5": np.array([
+    "bar_5": np.array([
         [1,1,1,1,1]
     ]),
     "vertical_bar_2": np.array([
@@ -91,6 +95,14 @@ PIECES = {
     "L_large_horizontal_right": np.array([
         [1,1,1],
         [0,0,1]
+    ]),
+    "L_large_horizontal_flip_left": np.array([
+        [1,0,0],
+        [1,1,1]
+    ]),
+    "L_large_horizontal_flip_right": np.array([
+        [0,0,1],
+        [1,1,1]
     ]),
     #Long L shapes
     "L_long": np.array([
