@@ -1,14 +1,18 @@
 #For the brain of the solver, uses stuff from logic.py
-import logic
+from solver import logic
 import numpy as np
 from itertools import permutations
 
-def try_sequence(grid, remaining_pieces, placements, score):
-    if not remaining_pieces: #base case, no more pieces to place
-        return placements, score
 
-    piece_name, piece = remaining_pieces[0]  # always work on the first piece; solve() handles ordering via permutations
-    remaining = remaining_pieces[1:]  # slice out index 0 so identical pieces aren't both removed
+def try_sequence(grid, remaining_pieces, placements, score):
+    # Recursive: places remaining_pieces[0], then calls itself for [1], [2], etc.
+    # Returns the (placements, score) that achieves the best total, or None if
+    # no complete sequence is possible from this board state.
+    if not remaining_pieces:
+        return placements, score  # base case — all pieces placed successfully
+
+    piece_name, piece = remaining_pieces[0]
+    remaining = remaining_pieces[1:]  # [1:] instead of filtering by value, so identical pieces stay independent
 
     best_placements = None
     best_score = -1
@@ -18,10 +22,11 @@ def try_sequence(grid, remaining_pieces, placements, score):
             if logic.can_place_piece(grid, piece, row, col):
                 new_grid = logic.place_piece(grid, piece, row, col)
                 cleared_grid, lines_cleared = logic.clear_lines(new_grid)
-                new_score = score + int(np.sum(piece)) + lines_cleared #cells placed + lines cleared
+                new_score = score + int(np.sum(piece)) + lines_cleared  # np.sum counts the filled cells
                 new_placements = placements + [(piece_name, row, col)]
                 result = try_sequence(cleared_grid, remaining, new_placements, new_score)
 
+                # None means the remaining pieces couldn't all fit from this position — skip it
                 if result is not None:
                     result_placements, result_score = result
                     if result_score > best_score:
@@ -29,10 +34,13 @@ def try_sequence(grid, remaining_pieces, placements, score):
                         best_placements = result_placements
 
     if best_placements is None:
-        return None  # no valid complete sequence found from this state
+        return None  # no valid complete sequence from this state
     return best_placements, best_score
 
+
 def solve(grid, three_pieces_dict):
+    # Try every ordering of the 3 pieces and return the highest-scoring complete sequence.
+    # Ordering matters because placing piece A first may clear a line that lets piece B fit.
     best_score = -1
     best_placements = None
 
