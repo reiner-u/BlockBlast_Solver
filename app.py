@@ -2,12 +2,13 @@
 import streamlit as st
 import numpy as np
 from solver import core, logic
+from solver.pieces import PIECES
 
 BOARD_SIZE = 8
 PIECE_GRID_SIZE = 5
 
-# --- Session state initialisation ---
-# State for each grid is stored as a flat binary string — one char per cell, row by row.
+# session initialized here
+# State for each grid is stored as a flat binary string. one char per cell, row by row.
 # e.g. an 8x8 board starts as "0" * 64
 
 def init_state():
@@ -20,9 +21,7 @@ def init_state():
     if "result" not in st.session_state:
         st.session_state["result"] = None
 
-# --- CSS ---
-# Injected once at the top of the page to make all buttons render as compact square cells
-
+# CSS injected once at the top of the page to make all buttons render as compact square cells
 GRID_CSS = """
 <style>
     .stButton > button {
@@ -39,8 +38,7 @@ GRID_CSS = """
 </style>
 """
 
-# --- Input grid helpers ---
-
+# Input grid helpers
 def render_grid(key, size):
     state = list(st.session_state[f"{key}_input"])
     for r in range(size):
@@ -54,12 +52,12 @@ def render_grid(key, size):
                 st.rerun()
 
 def state_to_numpy(key, size):
-    # Convert the flat binary string back into a 2D numpy int array for the solver
+    #convert the flat binary string back into a 2D numpy int array for the solver
     state_string = st.session_state[f"{key}_input"]
     flat = [int(c) for c in state_string]
     return np.array(flat).reshape(size, size)
 
-def crop_piece(arr):
+def crop_piece(arr): #crops 5x5 grid down to size of entered shape. compares it to known pieces and returns only if valid, otherwise returs nothing
     # arr is a numpy int array. Crop to the tight bounding box of filled cells.
     rows_any = np.any(arr, axis=1)
     cols_any = np.any(arr, axis=0)
@@ -67,7 +65,10 @@ def crop_piece(arr):
         return None  # nothing drawn
     rmin, rmax = np.where(rows_any)[0][[0, -1]]
     cmin, cmax = np.where(cols_any)[0][[0, -1]]
-    return arr[rmin:rmax+1, cmin:cmax+1]
+    for piece in PIECES.values():
+        if np.array_equal(arr[rmin:rmax+1, cmin:cmax+1], piece):
+            return arr[rmin:rmax+1, cmin:cmax+1]
+    return None
 
 def reset_all():
     # Wipe everything >:)
@@ -82,8 +83,8 @@ def clear_pieces():
         st.session_state[f"piece_{i}_input"] = "0" * (PIECE_GRID_SIZE * PIECE_GRID_SIZE)
     st.session_state["result"] = None
 
-# --- Solution display helpers ---
 
+#gui stuff over here
 # Cell colours for the solution display
 COLOR_EMPTY   = "#2d2d3d"
 COLOR_FILLED  = "#1565C0"  # existing filled cells
@@ -168,7 +169,7 @@ def display_solution(initial_board, placements, three_pieces):
         unsafe_allow_html=True
     )
 
-# --- App ---
+#web app over here
 
 init_state()
 st.markdown(GRID_CSS, unsafe_allow_html=True)
@@ -221,7 +222,7 @@ if solve_col.button("Solve", use_container_width=True):
             # Store board and pieces alongside placements so display_solution can simulate each step
             st.session_state["result"] = ("success", placements, score, three_pieces, board)
 
-# Result display — stored in session_state so it persists after further cell clicks
+# Result display, stored in session_state so it persists after further cell clicks
 if st.session_state["result"] is not None:
     result = st.session_state["result"]
     if result[0] == "warning":
