@@ -11,6 +11,15 @@ PIECES = {
         [1,1],
         [1,1]
     ]),
+    "square_2_long": np.array([
+        [1,1],
+        [1,1],
+        [1,1]
+    ]),
+    "square_2_wide": np.array([
+        [1,1,1],
+        [1,1,1]
+    ]),
     "square_3": np.array([
         [1,1,1],
         [1,1,1],

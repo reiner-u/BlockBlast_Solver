@@ -21,7 +21,7 @@ def init_state():
     if "result" not in st.session_state:
         st.session_state["result"] = None
 
-# CSS injected once at the top of the page to make all buttons render as compact square cells
+#CSS to make all buttons render as compact square cells
 GRID_CSS = """
 <style>
     .stButton > button {
