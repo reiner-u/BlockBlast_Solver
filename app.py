@@ -204,23 +204,27 @@ if reset_col.button("Reset", use_container_width=True):
 
 if solve_col.button("Solve", use_container_width=True):
     board = state_to_numpy("board", BOARD_SIZE)
-
+    invalid_input = False
     three_pieces = {}
     for i in range(1, 4):
         arr = state_to_numpy(f"piece_{i}", PIECE_GRID_SIZE)
         piece = crop_piece(arr)
-        if piece is not None:
+        if piece is None and arr.sum() > 0: #Meaning, the user drew something but doesn't match a shape from the piece catalogue
+            st.session_state["result"] = ("warning", f"Piece {i} is not a valid shape.")
+            invalid_input = True
+            break
+        if piece is not None: #The user didn't leave it blank, and it matches a valid piece
             three_pieces[f"piece_{i}"] = piece
-
-    if not three_pieces:
-        st.session_state["result"] = ("warning", "Please draw at least one piece.")
-    else:
-        placements, score = core.solve(board, three_pieces)
-        if not placements:
-            st.session_state["result"] = ("error", "No valid solution found — the pieces cannot all be placed.")
+    if not invalid_input:
+        if len(three_pieces) < 3: #checks that a full set of three pieces have been entered
+            st.session_state["result"] = ("warning", "Please draw all three correct pieces.")
         else:
-            # Store board and pieces alongside placements so display_solution can simulate each step
-            st.session_state["result"] = ("success", placements, score, three_pieces, board)
+            placements, score = core.solve(board, three_pieces)
+            if not placements:
+                st.session_state["result"] = ("error", "No valid solution found — the pieces cannot all be placed.")
+            else:
+                # Store board and pieces alongside placements so display_solution can simulate each step
+                st.session_state["result"] = ("success", placements, score, three_pieces, board)
 
 # Result display, stored in session_state so it persists after further cell clicks
 if st.session_state["result"] is not None:
