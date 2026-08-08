@@ -4,6 +4,10 @@ A solver for the mobile puzzle game Block Blast, built entirely from scratch in 
 
 You feed it your current board and the three pieces you've been dealt. It figures out the best place to put all of them.
 
+**Live demo:** [blockblastsolver.streamlit.app](https://blockblastsolver.streamlit.app)
+
+![Block Blast Solver screenshot](assets/blockblast_solver.png)
+
 ---
 
 ## How it works
@@ -42,6 +46,8 @@ app.py         : Streamlit GUI: grid input, solution display, session management
 
 ## Running it
 
+The app is deployed and live at [blockblastsolver.streamlit.app](https://blockblastsolver.streamlit.app), so no setup is needed to try it. If you'd rather run it locally:
+
 ```bash
 # From the project root, with the venv active:
 streamlit run app.py
@@ -53,4 +59,4 @@ Dependencies: `streamlit`, `numpy`. That's it.
 
 ## What's next
 
-Phase 3: the solver drives itself. Screen capture the game, parse the board state and incoming pieces via computer vision, map pixel coordinates to board positions, and automate the drag inputs, no human in the loop. Purely for the sake of doing it.
+Phase 3 was always the ambitious one: screen capture the game, detect the board state and pieces via computer vision, map pixel coordinates, and automate the drag inputs with no human in the loop. The idea still stands. Realistically though, other projects are taking priority right now, so this one is on the backburner for the foreseeable future. It'll get there eventually.
