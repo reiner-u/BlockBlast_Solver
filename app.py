@@ -3,6 +3,8 @@ import streamlit as st
 import numpy as np
 from solver import core, logic
 from solver.pieces import PIECES
+import uuid
+from posthog import Posthog
 
 BOARD_SIZE = 8
 PIECE_GRID_SIZE = 5
@@ -169,6 +171,39 @@ def display_solution(initial_board, placements, three_pieces):
         unsafe_allow_html=True
     )
 
+# PostHog analytics (server-side, since Streamlit can't run a client-side snippet).
+# Analytics must never break the solver, so everything here fails quietly,
+# e.g. when running locally without secrets configured.
+@st.cache_resource
+def get_posthog():
+    try:
+        return Posthog(
+            project_api_key=st.secrets["POSTHOG_API_KEY"],
+            host=st.secrets["POSTHOG_HOST"],
+        )
+    except Exception:
+        return None
+
+posthog = get_posthog()
+
+# Reuse the visitor's id if they arrived from a decorated portfolio link,
+# otherwise fall back to a per-session id so actions in one visit stay grouped.
+if "ph_distinct_id" not in st.session_state:
+    st.session_state["ph_distinct_id"] = st.query_params.get("distinct_id", str(uuid.uuid4()))
+
+def track(event, properties=None):
+    if posthog is None:
+        return
+    try:
+        posthog.capture(event, distinct_id=st.session_state["ph_distinct_id"], properties=properties or {})
+    except Exception:
+        pass
+
+# Fire once per session to stand in for a pageview
+if "ph_pageview_sent" not in st.session_state:
+    track("$pageview", {"$current_url": "https://blockblastsolver.streamlit.app"})
+    st.session_state["ph_pageview_sent"] = True
+
 #web app over here
 
 init_state()
@@ -203,6 +238,7 @@ if reset_col.button("Reset", use_container_width=True):
     st.rerun()
 
 if solve_col.button("Solve", use_container_width=True):
+    track("solver_run")
     board = state_to_numpy("board", BOARD_SIZE)
     invalid_input = False
     three_pieces = {}

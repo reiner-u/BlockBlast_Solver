@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .DS_Store
 test_solver.py
+.streamlit/secrets.toml
